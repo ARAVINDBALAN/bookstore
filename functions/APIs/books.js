@@ -4,8 +4,24 @@ const { db } = require('../utils/admin')
 
 
 exports.getAllBooks = async (req,res) => {
-    let books =  await db.collection('books').orderBy('title','desc').get()
     let bookList =[]
+    let books
+    if(req.query.sortbyprice){
+        if(req.query.sortbyprice==='hightolow'){
+            books =  await db.collection('books').orderBy('price','desc').get()
+        }
+        else if(req.query.sortbyprice==='lowtohigh'){
+            books =  await db.collection('books').orderBy('price','asc').get()
+            
+        }    
+    }
+    else if(req.params.category){
+        books =  await db.collection('books').where('category','==',req.params.category).get()
+
+    }
+    else{
+        books =  await db.collection('books').orderBy('title','asc').get()
+    }
     books.forEach(data => {
         bookList.push({
             id:data.id,
@@ -36,9 +52,9 @@ exports.addBooks = async (req,res) =>{
 
 exports.editBooks = async (req,res) =>{
 
-    const bookToUpdate = await db.doc('/books/${req.params.id}')
-    if(!bookToUpdate.exists){
-        return res.status(404).json({err : "No book found"})
+    const bookToUpdate =  db.collection('books').doc(req.params.id)
+    if(!bookToUpdate){
+        return res.status(404).json({err : req.params.id})
     }
     else{
         
@@ -52,9 +68,9 @@ exports.editBooks = async (req,res) =>{
 
 exports.deleteBook = async (req,res) => {
 
-    const bookToDelete = await db.doc('/books/${req.params.id}')
-    if(!bookToDelete.exists){
-        return res.status(404).json({err : "No book found"})
+    const bookToDelete =  db.collection('books').doc(req.params.id)
+    if(!bookToDelete){
+        return res.status(404).json({err : req.params.id})
     }
     else{
         await bookToDelete.delete()
@@ -62,3 +78,5 @@ exports.deleteBook = async (req,res) => {
     }
 
 }
+
+
